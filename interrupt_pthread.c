@@ -2,77 +2,61 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <time.h>
 
-int mask_keyboard = 0, mask_mouse = 0, mask_printer = 0;
+int mask_keyboard = 0;
+int mask_mouse = 0;
+int mask_printer = 1;
+pthread_mutex_t lock;
 
-void* keyboard_isr(void* arg) {
-    if (!mask_keyboard)
-        printf("Keyboard Interrupt Triggered -> Handling ISR -> Completed\n");
-    else
-        printf("Keyboard Interrupt Masked\n");
-    return NULL;
+void log_interrupt(const char *msg) {
+    pthread_mutex_lock(&lock);
+    FILE *f = fopen("interrupt_log.txt", "a");
+    if (f) {
+        time_t now = time(NULL);
+        struct tm *t = localtime(&now);
+        fprintf(f, "[%02d:%02d:%02d] %s\n", t->tm_hour, t->tm_min, t->tm_sec, msg);
+        fclose(f);
+    }
+    pthread_mutex_unlock(&lock);
 }
 
-void* mouse_isr(void* arg) {
-    if (!mask_mouse)
-        printf("Mouse Interrupt Triggered -> Handling ISR -> Completed\n");
-    else
-        printf("Mouse Interrupt Masked\n");
-    return NULL;
-}
-
-void* printer_isr(void* arg) {
-    if (!mask_printer)
-        printf("Printer Interrupt Triggered -> Handling ISR -> Completed\n");
-    else
-        printf("Printer Interrupt Masked\n");
+void *handle_interrupt(void *arg) {
+    char *device = (char *)arg;
+    char msg[200];
+    sprintf(msg, "%s Interrupt Triggered -> Handling ISR -> Completed", device);
+    printf("%s\n", msg);
+    log_interrupt(msg);
+    sleep(1);
     return NULL;
 }
 
 int main() {
-    int choice, device;
-    pthread_t t1, t2, t3;
+    srand(time(0));
+    pthread_t t;
+    pthread_mutex_init(&lock, NULL);
 
-    while (1) {
-        printf("\n=== Interrupt Handling Simulation (pthreads) ===\n");
-        printf("1. Trigger Keyboard Interrupt\n");
-        printf("2. Trigger Mouse Interrupt\n");
-        printf("3. Trigger Printer Interrupt\n");
-        printf("4. Mask/Unmask Devices\n");
-        printf("5. Exit\n");
-        printf("Enter your choice: ");
-        scanf("%d", &choice);
+    printf("=== INTERRUPT HANDLING SIMULATION (pthreads) ===\n");
+    printf("Priority: Keyboard > Mouse > Printer\n");
+    printf("Masking Status: Keyboard=0, Mouse=0, Printer=1\n\n");
 
-        switch (choice) {
-            case 1:
-                pthread_create(&t1, NULL, keyboard_isr, NULL);
-                pthread_join(t1, NULL);
-                break;
-            case 2:
-                pthread_create(&t2, NULL, mouse_isr, NULL);
-                pthread_join(t2, NULL);
-                break;
-            case 3:
-                pthread_create(&t3, NULL, printer_isr, NULL);
-                pthread_join(t3, NULL);
-                break;
-            case 4:
-                printf("Select device: 1.Keyboard 2.Mouse 3.Printer\n");
-                scanf("%d", &device);
-                if (device == 1)
-                    mask_keyboard = !mask_keyboard;
-                else if (device == 2)
-                    mask_mouse = !mask_mouse;
-                else if (device == 3)
-                    mask_printer = !mask_printer;
-                printf("Mask toggled successfully!\n");
-                break;
-            case 5:
-                printf("Exiting simulation\n");
-                exit(0);
-            default:
-                printf("Invalid choice!\n");
+    for (int i = 0; i < 6; i++) {
+        int dev = rand() % 3;
+        if (dev == 0 && !mask_keyboard)
+            pthread_create(&t, NULL, handle_interrupt, "Keyboard");
+        else if (dev == 1 && !mask_mouse)
+            pthread_create(&t, NULL, handle_interrupt, "Mouse");
+        else if (dev == 2 && !mask_printer)
+            pthread_create(&t, NULL, handle_interrupt, "Printer");
+        else {
+            printf("Interrupt Ignored (Masked)\n");
+            log_interrupt("Interrupt Ignored (Masked)");
         }
+        pthread_join(t, NULL);
+        sleep(1);
     }
+
+    pthread_mutex_destroy(&lock);
+    printf("\nExecution stopped. All interrupts handled successfully.\n");
     return 0;
 }
