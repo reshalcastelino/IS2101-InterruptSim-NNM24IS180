@@ -5,28 +5,46 @@ Name:Reshal Melissa Castelino
 Usn:NNM24IS180  
 Language:C 
 
-Description
-This project simulates interrupt handling using pthreads in C.  
-Three I/O devices — Keyboard, Mouse, and Printer — generate interrupts that are handled based on priority.  
-The user can also mask or unmask devices while the program runs.
+## Description
+This program simulates interrupt handling from multiple I/O devices (Keyboard, Mouse, Printer) using pthreads in C.  
+Each device has a fixed priority:
+- Keyboard → High priority  
+- Mouse → Medium priority  
+- Printer → Low priority  
+The program automatically triggers interrupts and ensures that higher priority interrupts are handled first.  
+It also supports masking, where masked devices are ignored during execution.  
+After execution, a message is displayed that all interrupts have been handled successfully.
 
-How to Compile & Run
+## Inputs and Outputs
+Inputs:  
+Nomanual input is required. The program randomly generates interrupts for Keyboard, Mouse, and Printer.  
+Outputs:
+The program prints interrupt handling status messages on the terminal, such as:  
+- `Keyboard Interrupt Triggered -> Handling ISR -> Completed`  
+- `Interrupt Ignored (Masked)`  
+- `Execution stopped. All interrupts handled successfully.`  
+
+## How to Compile & Run
 ```bash
-gcc interrupt_pthread.c -o interrupt_pthread -lpthread
-interrupt_pthread
+gcc interrupt_s
+imulation.c -o interrupt_simulation -lpthread
+interrupt_simulation
 ```
-Output
+## Sample Output
+=== INTERRUPT HANDLING SIMULATION (pthreads) ===
+Priority: Keyboard > Mouse > Printer
+Masking Status: Keyboard=0, Mouse=0, Printer=1
 
+Keyboard Interrupt Triggered -> Handling ISR -> Completed
+Mouse Interrupt Triggered -> Handling ISR -> Completed
+Interrupt Ignored (Masked)
+Keyboard Interrupt Triggered -> Handling ISR -> Completed
+Mouse Interrupt Triggered -> Handling ISR -> Completed
+Interrupt Ignored (Masked)
 
+Execution stopped. All interrupts handled successfully.
 
-<img width="849" height="681" alt="Screenshot 2025-10-19 213928" src="https://github.com/user-attachments/assets/def52d18-974d-4613-8ec9-89b5b8bc7ac9" />
+## Output
 
-<img width="932" height="674" alt="Screenshot 2025-10-19 214001" src="https://github.com/user-attachments/assets/c0555a5a-0556-482f-a6a8-5d5531742230" />
+<img width="855" height="338" alt="Screenshot 2025-10-27 181526" src="https://github.com/user-attachments/assets/52d3ecb4-f882-49fe-8e15-0f680185d081" />
 
-<img width="836" height="453" alt="Screenshot 2025-10-19 214015" src="https://github.com/user-attachments/assets/576e6785-d39d-4526-ad51-c272aee51ed0" />
-
-Concusion
-
-This program demonstrates how interrupts from multiple devices are handled based on priority using pthreads.
-It also shows how masking can be used to temporarily disable certain interrupts, giving a simple yet clear view
-of how real-time interrupt handling works in operating systems.
